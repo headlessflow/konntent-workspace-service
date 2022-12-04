@@ -1,0 +1,57 @@
+version: '3.3'
+services:
+  konntent-workspace-service:
+    image: cosmtrek/air
+    command: -c=.air.app.toml
+    working_dir: /app
+    environment:
+      - ENV=production
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./:/app
+      - go-modules-volume:/go/pkg/mod
+    networks:
+      - network-sms-service
+#    depends_on:
+#      - rabbit-mq-node
+    restart: always
+
+#  konntent-service-consumer-service:
+#    container_name: konntent-service-consumer-service
+#    build:
+#      context: .
+#      dockerfile: consumer.Dockerfile
+#    environment:
+#      - ENV=production
+#      - AMQP_SERVER_URL=
+#    volumes:
+#      - ./:/app,
+#    networks:
+#      - network-sms-service
+#    depends_on:
+#      - rabbit-mq-node
+#    restart: always
+
+
+#  rabbit-mq-node:
+#    image: "rabbitmq-custom-management"
+#    hostname: "rabbit-mq-node"
+#    build:
+#      context: .
+#      dockerfile: deployments/rabbitmq/Dockerfile
+#    environment:
+#      RABBITMQ_ERLANG_COOKIE: "U1dRT0tPRFNRQUxSUENMTk1FUUc="
+#      RABBITMQ_DEFAULT_USER: "rabbitmq"
+#      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+#      RABBITMQ_DEFAULT_VHOST: "/"
+#    ports:
+#      - "15672:15672"
+#      - "5672:5672"
+
+networks:
+  network-sms-service:
+    driver: bridge
+
+volumes:
+  go-modules-volume:

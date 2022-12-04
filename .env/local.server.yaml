@@ -1,0 +1,22 @@
+---
+version: 2.0
+
+application:
+  client:
+    url: ""
+
+  rabbitmq:
+    server-url: "amqp://rabbitmq:rabbitmq@192.168.1.26:5672"
+    queue-settings:
+      exchange: "sms.queue.exchange"
+      queue: "sms.queue"
+      routing: "sms.queue.routing.key"
+      ttl: 5000
+      dlx: "dlx"
+      dlq: "dlq"
+      dlrk: "dlrk"
+      dlq-ttl: 15000
+      max-retries: 3
+
+  server:
+    sign-key: "r4u7x!A%D*G-JaNdRgUkXp2s5v8y/B?E"
