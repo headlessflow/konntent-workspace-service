@@ -4,42 +4,43 @@
 //go:build !wireinject
 // +build !wireinject
 
-package konntent_service_template
+package konntent_workspace_service
 
 import (
 	"github.com/google/wire"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"konntent-workspace-service/internal/app"
-	"konntent-workspace-service/internal/app/dummy"
 	"konntent-workspace-service/internal/app/handler"
 	"konntent-workspace-service/internal/app/orchestration"
-	"konntent-workspace-service/internal/listener/consumer"
-	"konntent-workspace-service/pkg/claimer"
-	"konntent-workspace-service/pkg/dummyclient"
+	"konntent-workspace-service/internal/app/workspace"
 	"konntent-workspace-service/pkg/nrclient"
-	"konntent-workspace-service/pkg/rabbit"
+	"konntent-workspace-service/pkg/pg"
 )
 
 // Injectors from wire.go:
 
-func InitAll(l *logrus.Logger, mc dummyclient.Client, mqp rabbit.Client, jwtInstance claimer.Claimer, nrInstance nrclient.NewRelicInstance) app.Router {
-	service := dummy.NewDummyService(l, mc)
-	dummyOrchestrator := orchestration.NewDummyOrchestrator(service)
-	dummyHandler := handler.NewDummyHandler(dummyOrchestrator)
-	router := app.NewRoute(dummyHandler)
+func InitAll(l *zap.Logger, pgInstance pg.Instance, nrInstance nrclient.NewRelicInstance) app.Router {
+	repository := workspace.NewWorkspaceRepository(pgInstance)
+	service := workspace.NewWorkspaceService(repository)
+	workspaceOrchestrator := orchestration.NewWorkspaceOrchestrator(l, service)
+	workspaceHandler := handler.NewWorkspaceHandler(workspaceOrchestrator)
+	router := app.NewRoute(workspaceHandler)
 	return router
 }
 
 // wire.go:
 
-var serviceProviders = wire.NewSet(dummy.NewDummyService, consumer.NewDummyConsumerService)
+var serviceProviders = wire.NewSet(workspace.NewWorkspaceRepository)
 
-var orchestratorProviders = wire.NewSet(orchestration.NewDummyOrchestrator)
+var orchestratorProviders = wire.NewSet(orchestration.NewWorkspaceOrchestrator)
 
-var handlerProviders = wire.NewSet(handler.NewDummyHandler)
+var handlerProviders = wire.NewSet(handler.NewWorkspaceHandler)
+
+var repositoryProviders = wire.NewSet(workspace.NewWorkspaceService)
 
 var allProviders = wire.NewSet(
 	serviceProviders,
 	orchestratorProviders,
 	handlerProviders,
+	repositoryProviders,
 )

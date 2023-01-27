@@ -16,12 +16,12 @@ type Router interface {
 }
 
 type route struct {
-	dummyHandler handler.DummyHandler
+	workspaceHandler handler.WorkspaceHandler
 }
 
-func NewRoute(dummyHandler handler.DummyHandler) Router {
+func NewRoute(workspaceHandler handler.WorkspaceHandler) Router {
 	return &route{
-		dummyHandler: dummyHandler,
+        workspaceHandler: workspaceHandler,
 	}
 }
 

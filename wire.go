@@ -1,37 +1,40 @@
 //go:build wireinject
 // +build wireinject
 
-package konntent_service_template
+package konntent_workspace_service
 
 import (
 	"github.com/google/wire"
 	"go.uber.org/zap"
 	"konntent-workspace-service/internal/app"
-	"konntent-workspace-service/internal/app/dummy"
-	"konntent-workspace-service/internal/app/handler"
-	"konntent-workspace-service/internal/app/orchestration"
-	"konntent-workspace-service/internal/listener/consumer"
-	"konntent-workspace-service/pkg/nrclient"
+    "konntent-workspace-service/internal/app/handler"
+    "konntent-workspace-service/internal/app/orchestration"
+    "konntent-workspace-service/internal/app/workspace"
+    "konntent-workspace-service/pkg/nrclient"
 	"konntent-workspace-service/pkg/pg"
 )
 
 var serviceProviders = wire.NewSet(
-	dummy.NewDummyService,
-	consumer.NewDummyConsumerService,
+    workspace.NewWorkspaceRepository,
 )
 
 var orchestratorProviders = wire.NewSet(
-	orchestration.NewDummyOrchestrator,
+    orchestration.NewWorkspaceOrchestrator,
 )
 
 var handlerProviders = wire.NewSet(
-	handler.NewDummyHandler,
+    handler.NewWorkspaceHandler,
+)
+
+var repositoryProviders = wire.NewSet(
+    workspace.NewWorkspaceService,
 )
 
 var allProviders = wire.NewSet(
 	serviceProviders,
 	orchestratorProviders,
 	handlerProviders,
+    repositoryProviders,
 )
 
 func InitAll(

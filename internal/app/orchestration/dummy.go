@@ -20,5 +20,5 @@ func NewDummyOrchestrator(ds dummy.Service) DummyOrchestrator {
 }
 
 func (o *dummyOrchestrator) Handle(ctx context.Context, req request.DummyRequest) (resource.DummyResource, error) {
-	return o.dummyService.Handle(ctx, req.ToEvent())
+	return o.dummyService.Handle(ctx)
 }
