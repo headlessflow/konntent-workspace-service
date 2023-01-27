@@ -6,8 +6,8 @@ import (
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/pgjson"
 	"go.uber.org/zap"
-	"konntent-authentication-service/configs/app"
-	"konntent-authentication-service/pkg/pg/hooks"
+	"konntent-workspace-service/configs/app"
+	"konntent-workspace-service/pkg/pg/hooks"
 )
 
 type Instance interface {

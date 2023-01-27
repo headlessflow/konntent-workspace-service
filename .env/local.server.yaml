@@ -20,3 +20,4 @@ application:
 
   server:
     sign-key: "r4u7x!A%D*G-JaNdRgUkXp2s5v8y/B?E"
+    port: "8082"

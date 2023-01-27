@@ -17,41 +17,41 @@ services:
 #      - rabbit-mq-node
     restart: always
 
-#  konntent-service-consumer-service:
-#    container_name: konntent-service-consumer-service
-#    build:
-#      context: .
-#      dockerfile: consumer.Dockerfile
-#    environment:
-#      - ENV=production
-#      - AMQP_SERVER_URL=
-#    volumes:
-#      - ./:/app,
-#    networks:
-#      - network-sms-service
-#    depends_on:
-#      - rabbit-mq-node
-#    restart: always
-
-
-#  rabbit-mq-node:
-#    image: "rabbitmq-custom-management"
-#    hostname: "rabbit-mq-node"
-#    build:
-#      context: .
-#      dockerfile: deployments/rabbitmq/Dockerfile
-#    environment:
-#      RABBITMQ_ERLANG_COOKIE: "U1dRT0tPRFNRQUxSUENMTk1FUUc="
-#      RABBITMQ_DEFAULT_USER: "rabbitmq"
-#      RABBITMQ_DEFAULT_PASS: "rabbitmq"
-#      RABBITMQ_DEFAULT_VHOST: "/"
-#    ports:
-#      - "15672:15672"
-#      - "5672:5672"
+  workspace-yugabyte:
+    container_name: yb-workspace-master-n1
+    image: yugabytedb/yugabyte:latest
+    environment:
+      POSTGRES_USER: konntent
+      POSTGRES_PASSWORD: 345xyxyyayaqd3
+      POSTGRES_DB: konntent-workspace
+      PGDATA: /data/yb
+      SERVICE_7000_NAME: yb-workspace-master
+    command: |
+      bash -c '
+      mkdir -p /var/workspace/ybinit
+      echo "create user '\''$${POSTGRES_USER}'\'' with password '\''$${POSTGRES_PASSWORD}'\'';" > /var/workspace/ybinit/01-usr.sql
+      echo "create database $${POSTGRES_DB:-$${POSTGRES_USER}};             " > /var/workspace/ybinit/02-db.sql
+      # start YugabyteDB
+      bin/yugabyted start --listen 0.0.0.0 --daemon=false --initial_scripts_dir=/var/ybinit --tserver_flags=ysql_enable_auth=true
+      '
+    volumes:
+      - yb-master-data-1:/var/workspace/ybinit
+    ports:
+      - "7001:7000"
+      - "9001:9000"
+      - "5434:5433"
+      - "9043:9042"
+    networks:
+      - yb
+    restart: unless-stopped
 
 networks:
+  yb:
+    driver: bridge
   network-sms-service:
     driver: bridge
 
 volumes:
   go-modules-volume:
+  yb-master-data-1:
+  yb-tserver-data-1:

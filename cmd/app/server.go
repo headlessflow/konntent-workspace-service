@@ -1,28 +1,29 @@
 package main
 
 import (
+	"github.com/mattn/go-colorable"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	di "konntent-workspace-service"
 	"konntent-workspace-service/internal/app"
 	"konntent-workspace-service/internal/app/middleware"
 	"konntent-workspace-service/pkg/claimer"
 	"konntent-workspace-service/pkg/constants"
-	"konntent-workspace-service/pkg/dummyclient"
 	"konntent-workspace-service/pkg/middlewarepkg"
 	"konntent-workspace-service/pkg/nrclient"
-	"konntent-workspace-service/pkg/rabbit"
+	"konntent-workspace-service/pkg/pg"
 	"konntent-workspace-service/pkg/utils"
 	"konntent-workspace-service/pkg/validation"
 
 	recoverpkg "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/sirupsen/logrus"
 )
 
 type server struct {
-	logger      *logrus.Logger
-	dummyClient dummyclient.Client
-	mqProducer  rabbit.Client
+	logger     *zap.Logger
+	pgInstance pg.Instance
+
 	jwtInstance claimer.Claimer
 	nrInstance  nrclient.NewRelicInstance
 }
@@ -39,9 +40,7 @@ func initServer(sv *server) *fiber.App {
 
 	route := di.InitAll(
 		sv.logger,
-		sv.dummyClient,
-		sv.mqProducer,
-		sv.jwtInstance,
+		sv.pgInstance,
 		sv.nrInstance,
 	)
 	route.SetupRoutes(&app.RouteCtx{
@@ -51,8 +50,16 @@ func initServer(sv *server) *fiber.App {
 	return fApp
 }
 
-func initLogger() *logrus.Logger {
-	return logrus.New()
+func initLogger() *zap.Logger {
+	zc := zap.NewDevelopmentEncoderConfig()
+	zc.EncodeLevel = zapcore.CapitalColorLevelEncoder
+
+	l := zap.New(zapcore.NewCore(
+		zapcore.NewConsoleEncoder(zc),
+		zapcore.AddSync(colorable.NewColorableStdout()),
+		zapcore.DebugLevel,
+	))
+	return l
 }
 
 func (s *server) initCommonMiddlewares(app *fiber.App) {

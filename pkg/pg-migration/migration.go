@@ -1,7 +1,7 @@
 package pg_migration
 
 import (
-	"konntent-authentication-service/pkg/pg"
+	"konntent-workspace-service/pkg/pg"
 )
 
 func Migrate(pgi pg.Instance, models ...interface{}) error {

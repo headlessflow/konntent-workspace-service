@@ -2,36 +2,27 @@ package main
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 	"konntent-workspace-service/configs/app"
 	"konntent-workspace-service/pkg/claimer"
 	"konntent-workspace-service/pkg/constants"
-	"konntent-workspace-service/pkg/dummyclient"
-	"konntent-workspace-service/pkg/httpclient"
 	"konntent-workspace-service/pkg/nrclient"
-	"konntent-workspace-service/pkg/rabbit"
-	"strings"
+	"konntent-workspace-service/pkg/pg"
+	pg_migration "konntent-workspace-service/pkg/pg-migration"
+	pg_rel_registration "konntent-workspace-service/pkg/pg-rel-registration"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-func boot(l *logrus.Logger, appConf app.ApplicationConfigs) (*server, error) {
+func boot(l *zap.Logger, appConf app.ApplicationConfigs) (*server, error) {
 	time.Local, _ = time.LoadLocation("Europe/Istanbul")
 
-	var (
-		httpClient         = httpclient.NewHTTPClient()
-		dummyClient        = dummyclient.NewClient(initDummyClientConfig(appConf.Client), httpClient)
-		mqConnectionClient = rabbit.NewClientConnector(l)
-		mqPreProducer      = rabbit.NewPreProducer(l, appConf.Rabbit.QueueSettings)
-		mqProducer         = rabbit.NewMessagingClient(l, mqConnectionClient, mqPreProducer)
-		jwtInstance        = claimer.NewClaimer(appConf.Server.SignKey)
-	)
-
-	//err := mqProducer.ConnectToBroker(appConf.Rabbit.URL)
-	//if err != nil {
-	//	return nil, err
-	//}
+	var jwtInstance = claimer.NewClaimer(appConf.Server.SignKey)
+	var pgInstance, err = initPG(l, appConf.Postgres)
+	if err != nil {
+		return nil, err
+	}
 
 	//nrInstance, err := initNewRelic(appConf.NewRelic)
 	//if err != nil {
@@ -40,17 +31,14 @@ func boot(l *logrus.Logger, appConf app.ApplicationConfigs) (*server, error) {
 
 	return &server{
 		logger:      l,
-		dummyClient: dummyClient,
-		mqProducer:  mqProducer,
+		pgInstance:  pgInstance,
 		jwtInstance: jwtInstance,
 		//nrInstance:  nrInstance,
 	}, nil
 }
 
-func initDummyClientConfig(dummyConf app.ClientConfig) dummyclient.Config {
-	return dummyclient.Config{
-		URL: dummyConf.URL,
-	}
+func initPG(l *zap.Logger, cfg app.PGSettings) (pg.Instance, error) {
+	return pg.NewPGInstance(l, cfg)
 }
 
 func initNewRelic(cfg app.NewRelicConfig) (nrclient.NewRelicInstance, error) {
@@ -82,14 +70,22 @@ func initConfig[T string | constants.AppEnvironment](env T) (*app.Configs, error
 		return nil, err
 	}
 
-	if strings.HasPrefix(appConf.Application.Rabbit.URL, "$") {
-		appConf.Application.Rabbit.URL = viper.GetString(constants.ConfigAMQPEnvKey)
-	}
-
 	appConf.Application.NewRelic = app.NewRelicConfig{
 		ApplicationKey:  viper.GetString(constants.ConfigNRLicenseKey),
 		ApplicationName: viper.GetString(constants.ConfigNRAppKey),
 	}
 
 	return &appConf, nil
+}
+
+func registrar(l *zap.Logger) {
+	pg_rel_registration.Register()
+}
+
+func migrate(l *zap.Logger, pg pg.Instance) {
+	err := pg_migration.Migrate(pg, pg_migration.MigrationModels...)
+	if err != nil {
+		l.Error("something went wrong while migrating...",
+			zap.Error(err))
+	}
 }

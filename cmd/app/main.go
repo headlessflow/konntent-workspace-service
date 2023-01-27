@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"go.uber.org/zap"
 	"konntent-workspace-service/pkg/constants"
 	"konntent-workspace-service/pkg/nrclient"
 	"log"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -19,19 +19,22 @@ func main() {
 	env := os.Getenv(constants.ConfigEnvKey)
 	conf, cErr := initConfig(env)
 	if cErr != nil {
-		logger.Error(cErr)
+		logger.Error("an error occurred on init config >>> ", zap.Error(cErr))
 		return
 	}
 
 	app, err := boot(logger, conf.Application)
 	if err != nil {
-		logger.Fatalf("Something went wrong while utilizing the server. %v", err)
+		logger.Fatal("Something went wrong while utilizing the server.", zap.Error(err))
 	}
 	sv := initServer(app)
 
+	registrar(logger)
+	migrate(logger, app.pgInstance)
+
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = conf.Application.Server.Port
 	}
 
 	go log.Fatal(sv.Listen(":" + port))
@@ -39,7 +42,7 @@ func main() {
 	graceful(logger, sv, app.nrInstance)
 }
 
-func graceful(l *logrus.Logger, a *fiber.App, nr nrclient.NewRelicInstance) {
+func graceful(l *zap.Logger, a *fiber.App, nr nrclient.NewRelicInstance) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 
@@ -48,6 +51,6 @@ func graceful(l *logrus.Logger, a *fiber.App, nr nrclient.NewRelicInstance) {
 	_, cancel := context.WithTimeout(context.Background(), constants.AppGracefulTimeout*time.Second)
 	defer cancel()
 	if err := a.Shutdown(); err != nil {
-		l.Fatal(err)
+		l.Fatal("unexpected error on shut down", zap.Error(err))
 	}
 }
