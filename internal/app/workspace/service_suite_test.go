@@ -1,4 +1,4 @@
-package dummy_test
+package workspace_test
 
 //
 //import (

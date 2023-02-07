@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"go.uber.org/zap"
 	"konntent-workspace-service/configs/app"
 	"konntent-workspace-service/pkg/claimer"
 	"konntent-workspace-service/pkg/constants"
@@ -11,6 +10,8 @@ import (
 	pg_migration "konntent-workspace-service/pkg/pg-migration"
 	pg_rel_registration "konntent-workspace-service/pkg/pg-rel-registration"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/spf13/viper"
 )

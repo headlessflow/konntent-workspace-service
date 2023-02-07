@@ -26,7 +26,10 @@ type NewRelicConfig struct {
 }
 
 type PGSettings struct {
+	Name     string `mapstructure:"name"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
 	Debug    bool   `mapstructure:"debug"`
 }

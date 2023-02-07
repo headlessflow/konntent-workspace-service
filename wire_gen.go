@@ -7,14 +7,15 @@
 package konntent_workspace_service
 
 import (
-	"github.com/google/wire"
-	"go.uber.org/zap"
 	"konntent-workspace-service/internal/app"
 	"konntent-workspace-service/internal/app/handler"
 	"konntent-workspace-service/internal/app/orchestration"
 	"konntent-workspace-service/internal/app/workspace"
 	"konntent-workspace-service/pkg/nrclient"
 	"konntent-workspace-service/pkg/pg"
+
+	"github.com/google/wire"
+	"go.uber.org/zap"
 )
 
 // Injectors from wire.go:

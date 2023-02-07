@@ -7,15 +7,11 @@ import (
 )
 
 func PutHeaders(ctx *fiber.Ctx) error {
-	var headerMap = make(map[string]string)
+	var headerMap = utils.ContextHeader{}
 
-	ctx.Request().Header.VisitAll(func(key, value []byte) {
-		if string(key) == utils.HeaderAuthorization {
-			headerMap[string(key)] = string(value)
-		}
-	})
+	_ = ctx.ReqHeaderParser(&headerMap)
+	ctx.Locals(utils.HeaderMapCtx, &headerMap)
 
-	ctx.Locals(utils.HeaderMapCtx, headerMap)
 	return ctx.Next()
 }
 

@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	"go.uber.org/zap"
 	"konntent-workspace-service/pkg/constants"
 	"konntent-workspace-service/pkg/nrclient"
 	"log"
 	"os"
 	"os/signal"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,6 +18,10 @@ func main() {
 	logger := initLogger()
 
 	env := os.Getenv(constants.ConfigEnvKey)
+	if env == "" {
+		env = "local"
+	}
+
 	conf, cErr := initConfig(env)
 	if cErr != nil {
 		logger.Error("an error occurred on init config >>> ", zap.Error(cErr))

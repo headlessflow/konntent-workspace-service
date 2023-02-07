@@ -21,7 +21,7 @@ type route struct {
 
 func NewRoute(workspaceHandler handler.WorkspaceHandler) Router {
 	return &route{
-        workspaceHandler: workspaceHandler,
+		workspaceHandler: workspaceHandler,
 	}
 }
 
@@ -35,8 +35,14 @@ func (r *route) SetupRoutes(rc *RouteCtx) {
 	rc.App.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
+
 	v1 := rc.App.Group("/v1")
-	v1.Get("/workspaces/:uid", func(ctx *fiber.Ctx) error {
+	v1.Get("/workspaces", r.workspaceHandler.GetWorkspaces)
+	v1.Get("/workspace", r.workspaceHandler.GetWorkspace)
+	v1.Post("/workspace", r.workspaceHandler.AddWorkspace)
+
+	v2 := rc.App.Group("/v2")
+	v2.Get("/workspaces/:uid", func(ctx *fiber.Ctx) error {
 		log.Println("user id: ", ctx.Params("uid"))
 
 		var response = Workspace{
@@ -48,13 +54,13 @@ func (r *route) SetupRoutes(rc *RouteCtx) {
 		return ctx.JSON(response)
 	})
 
-	v1.Post("/workspace", func(ctx *fiber.Ctx) error {
+	v2.Post("/workspace", func(ctx *fiber.Ctx) error {
 		return ctx.JSON(map[string]interface{}{
 			"workspaceId": 1,
 		})
 	})
 
-	v1.Get("/workspaces", func(ctx *fiber.Ctx) error {
+	v2.Get("/workspaces", func(ctx *fiber.Ctx) error {
 		var response = []Workspace{
 			{
 				Id:   1,

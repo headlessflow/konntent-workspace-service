@@ -1,6 +1,23 @@
-// //go:build integration
-// // +build integration
+//go:build integration
+// +build integration
+
 package handler_test
+
+import (
+	"errors"
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang/mock/gomock"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"go.uber.org/zap"
+	di "konntent-workspace-service"
+	"konntent-workspace-service/pkg/middlewarepkg"
+	nrcmock "konntent-workspace-service/pkg/nrclient/mocks"
+	pgimock "konntent-workspace-service/pkg/pg/mocks"
+	"konntent-workspace-service/pkg/utils"
+	"konntent-workspace-service/pkg/validation"
+	"testing"
+)
 
 //
 //import (
@@ -33,27 +50,18 @@ package handler_test
 //	"github.com/sirupsen/logrus/hooks/test"
 //)
 //
-//var (
-//	server *fiber.App
-//)
-//
-//var (
-//	mockCtrl        *gomock.Controller
-//	jwtInstance     *jwtmock.MockClaimer
-//	messagingClient *rabbitmock.MockClient
-//	mobilisimClient dummyclient.Client
-//
-//	errEvent = errors.New("something went wrong")
-//)
-//
-//var (
-//	jwtModel = claimer.Model{
-//		UserID: 1524,
-//		Credit: 110,
-//	}
-//	jwtModelBytes, _ = json.Marshal(jwtModel)
-//)
-//
+var (
+	server *fiber.App
+)
+
+var (
+	mockCtrl *gomock.Controller
+	pgMock   *pgimock.MockInstance
+	nrMock   *nrcmock.MockNewRelicInstance
+
+	errEvent = errors.New("something went wrong")
+)
+
 //const (
 //	mobilisimURL = "http://mobilisim.com/"
 //
@@ -65,11 +73,12 @@ package handler_test
 //	bearer                       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNTI0LCJjcmVkaXQiOjExMH0.aVSN0EShTyVnzqFAiI5Vf1XPixZGnrkvPXxPbNupSLo"
 //	mobilisimBearer              = "1234-5678-9123-0012"
 //)
-//
-//func TestHandlerIntegration(t *testing.T) {
-//	RegisterFailHandler(Fail)
-//	RunSpecs(t, "API Integration Suite")
-//}
+
+func TestHandlerIntegration(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "API Integration Suite")
+}
+
 //
 //var _ = BeforeEach(func() {
 //	jwtInstance.EXPECT().GetModel(gomock.Any()).AnyTimes().Return(&jwtModel)
@@ -87,60 +96,47 @@ package handler_test
 //	}()
 //})
 //
-//var _ = AfterSuite(func() {
-//	defer func() {
-//		_ = server.Shutdown()
-//	}()
-//})
-//
-//func loadMockDependencies() {
-//	mockCtrl = gomock.NewController(GinkgoT())
-//	jwtInstance = jwtmock.NewMockClaimer(mockCtrl)
-//	messagingClient = rabbitmock.NewMockClient(mockCtrl)
-//}
-//
-//func initServer() {
-//	var (
-//		logger, _ = test.NewNullLogger()
-//	)
-//	server = fiber.New(fiber.Config{
-//		DisableStartupMessage: true,
-//	})
-//
-//	validator := validation.InitValidator()
-//
-//	server.Use(func(ctx *fiber.Ctx) error {
-//		ctx.Locals(utils.Claimer, jwtInstance)
-//		return ctx.Next()
-//	})
-//	server.Use(func(c *fiber.Ctx) error {
-//		c.Locals(utils.Validator, validator)
-//		return c.Next()
-//	})
-//	server.Use(middlewarepkg.PutHeaders)
-//
-//	mobilisimClientConfig := dummyclient.Config{
-//		MobilisimURL: mobilisimURL,
-//	}
-//
-//	mobilisimClient = dummyclient.NewClient(mobilisimClientConfig, nil)
-//	nr, _ := nrclient.InitNewRelic(nrclient.Config{
-//		Key:     "nr-key",
-//		AppName: "nr-app-name",
-//	})
-//
-//	route := di.InitAll(
-//		logger,
-//		mobilisimClient,
-//		messagingClient,
-//		jwtInstance,
-//		nr,
-//	)
-//
-//	route.SetupRoutes(&appctx.RouteCtx{
-//		App: server,
-//	})
-//}
+var _ = AfterSuite(func() {
+	defer func() {
+		_ = server.Shutdown()
+	}()
+})
+
+func loadMockDependencies() {
+	mockCtrl = gomock.NewController(GinkgoT())
+	pgMock = pgimock.NewMockInstance(mockCtrl)
+}
+
+func initServer() {
+	var logger = zap.L()
+
+	server = fiber.New(fiber.Config{
+		DisableStartupMessage: true,
+	})
+
+	validator := validation.InitValidator()
+
+	server.Use(func(c *fiber.Ctx) error {
+		c.Locals(utils.Claimer, s.jwtInstance)
+		return c.Next()
+	})
+	server.Use(func(c *fiber.Ctx) error {
+		c.Locals(utils.Validator, validator)
+		return c.Next()
+	})
+	server.Use(middlewarepkg.PutHeaders)
+
+	route := di.InitAll(
+		logger,
+		pgMock,
+		nrInstance,
+	)
+
+	route.SetupRoutes(&appctx.RouteCtx{
+		App: server,
+	})
+}
+
 //
 //func prepareRequestWithToken(method, url string, data []byte) *http.Request {
 //	var body io.Reader

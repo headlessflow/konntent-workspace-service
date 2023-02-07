@@ -13,16 +13,12 @@ test-unit:
 test-all: test-integration test-unit
 
 generate-mocks:
-	mockgen -source=./pkg/httpclient/client.go -destination=./pkg/httpclient/mocks/client_mock.go -package=mocks
-	mockgen -source=./pkg/dummyclient/client.go -destination=./pkg/dummyclient/mocks/dummyclient_mock.go -package=mocks
-	mockgen -source=./pkg/claimer/claimer.go -destination=./pkg/claimer/mocks/claimer_mock.go -package=mocks
-	mockgen -source=./pkg/rabbit/preproducer.go -destination=./pkg/rabbit/mocks/preproducer_mock.go -package=mocks
-	mockgen -source=./pkg/rabbit/producer.go -destination=./pkg/rabbit/mocks/producer_mock.go -package=mocks
-	mockgen -source=./pkg/rabbit/consumermanager.go -destination=./pkg/rabbit/mocks/consumermanager_mock.go -package=mocks
-	mockgen -source=./pkg/rabbit/processor.go -destination=./pkg/rabbit/mocks/processor_mock.go -package=mocks
-	mockgen -source=./pkg/rabbit/client.go -destination=./pkg/rabbit/mocks/client_mock.go -package=mocks
-	mockgen -source=./pkg/rabbit/clientmanager.go -destination=./pkg/rabbit/mocks/clientmanager_mock.go -package=mocks
-	mockgen -source=./internal/app/dummy/service.go -destination=./internal/app/dummy/mocks/service_mock.go -package=mocks
+	mockgen -source=./internal/app/workspace/service.go -destination=./internal/app/workspace/mocks/service_mock.go -package=mocks
+	mockgen -source=./internal/app/workspace/repository.go -destination=./internal/app/workspace/mocks/repository_mock.go -package=mocks
+	mockgen -source=./internal/app/orchestration/workspace.go -destination=./internal/app/orchestration/mocks/orchestration_mock.go -package=mocks
+	mockgen -source=./internal/app/handler/workspace.go -destination=./internal/app/handler/mocks/handler_mock.go -package=mocks
+	mockgen -source=./pkg/pg/instance.go -destination=./pkg/pg/mocks/instance_mock.go -package=mocks
+	mockgen -source=./pkg/nrclient/nrclient.go -destination=./pkg/nrclient/mocks/newrelic_mock.go -package=mocks
 
 lint:
 	goimports -w . && gofmt -w .

@@ -4,37 +4,38 @@
 package konntent_workspace_service
 
 import (
+	"konntent-workspace-service/internal/app"
+	"konntent-workspace-service/internal/app/handler"
+	"konntent-workspace-service/internal/app/orchestration"
+	"konntent-workspace-service/internal/app/workspace"
+	"konntent-workspace-service/pkg/nrclient"
+	"konntent-workspace-service/pkg/pg"
+
 	"github.com/google/wire"
 	"go.uber.org/zap"
-	"konntent-workspace-service/internal/app"
-    "konntent-workspace-service/internal/app/handler"
-    "konntent-workspace-service/internal/app/orchestration"
-    "konntent-workspace-service/internal/app/workspace"
-    "konntent-workspace-service/pkg/nrclient"
-	"konntent-workspace-service/pkg/pg"
 )
 
 var serviceProviders = wire.NewSet(
-    workspace.NewWorkspaceRepository,
+	workspace.NewWorkspaceRepository,
 )
 
 var orchestratorProviders = wire.NewSet(
-    orchestration.NewWorkspaceOrchestrator,
+	orchestration.NewWorkspaceOrchestrator,
 )
 
 var handlerProviders = wire.NewSet(
-    handler.NewWorkspaceHandler,
+	handler.NewWorkspaceHandler,
 )
 
 var repositoryProviders = wire.NewSet(
-    workspace.NewWorkspaceService,
+	workspace.NewWorkspaceService,
 )
 
 var allProviders = wire.NewSet(
 	serviceProviders,
 	orchestratorProviders,
 	handlerProviders,
-    repositoryProviders,
+	repositoryProviders,
 )
 
 func InitAll(

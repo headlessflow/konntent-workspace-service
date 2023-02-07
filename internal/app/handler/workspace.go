@@ -1,10 +1,12 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"konntent-workspace-service/internal/app/dto/request"
 	"konntent-workspace-service/internal/app/orchestration"
 	"konntent-workspace-service/pkg/utils"
+	"log"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type WorkspaceHandler interface {
@@ -56,6 +58,23 @@ func (w *workspaceHandler) GetWorkspace(c *fiber.Ctx) error {
 }
 
 func (w *workspaceHandler) AddWorkspace(c *fiber.Ctx) error {
-	//TODO implement me
-	panic("implement me")
+	var (
+		ctx = c.Context()
+		req = request.AddWorkspaceRequest{
+			UserID: utils.GetUserIDByContext(ctx),
+		}
+	)
+
+	log.Println(req.UserID)
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.JSON(nil)
+	}
+
+	err := w.workspaceOrchestration.AddWorkspace(ctx, req)
+	if err != nil {
+		return c.JSON(nil)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
 }

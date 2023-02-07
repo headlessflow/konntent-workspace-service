@@ -1,6 +1,6 @@
 package pg_conditions
 
 const (
-    WhereID = "id = ?"
+	WhereID     = "id = ?"
 	WhereUserID = "user_id = ?"
 )

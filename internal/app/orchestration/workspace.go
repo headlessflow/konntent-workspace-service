@@ -2,15 +2,16 @@ package orchestration
 
 import (
 	"context"
-	"go.uber.org/zap"
 	"konntent-workspace-service/internal/app/dto/request"
 	"konntent-workspace-service/internal/app/workspace"
+
+	"go.uber.org/zap"
 )
 
 type WorkspaceOrchestrator interface {
 	GetWorkspaces(c context.Context, uid int) (interface{}, error)
 	GetWorkspace(c context.Context, req request.GetWorkspaceRequest) (interface{}, error)
-	AddWorkspace(c context.Context, uid int) (interface{}, error)
+	AddWorkspace(c context.Context, req request.AddWorkspaceRequest) error
 }
 
 type workspaceOrchestrator struct {
@@ -30,6 +31,6 @@ func (w *workspaceOrchestrator) GetWorkspace(c context.Context, req request.GetW
 	return w.workspaceService.GetWorkspace(c, req)
 }
 
-func (w *workspaceOrchestrator) AddWorkspace(c context.Context, uid int) (interface{}, error) {
-	return w.workspaceService.AddWorkspace(c, uid)
+func (w *workspaceOrchestrator) AddWorkspace(c context.Context, req request.AddWorkspaceRequest) error {
+	return w.workspaceService.AddWorkspace(c, req)
 }

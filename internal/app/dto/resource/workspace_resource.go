@@ -1,26 +1,33 @@
 package resource
 
 import (
-    "konntent-workspace-service/internal/app/datamodel"
-    "log"
+	"konntent-workspace-service/internal/app/datamodel"
 )
 
 type Workspace struct {
-    Name string `json:"name"`
-    URL string `json:"url"`
+	ID   int    `json:"id,omitempty"`
+	Name string `json:"name" json:"name,omitempty"`
+	URL  string `json:"url" json:"url,omitempty"`
 }
 
 func NewWorkspaceResource(w *datamodel.Workspace) *Workspace {
-    return &Workspace{}
+	return &Workspace{
+		ID:   w.ID,
+		Name: w.Name,
+		URL:  w.URL,
+	}
 }
 
 func NewWorkspacesResource(ws []datamodel.Workspace) []Workspace {
-    var res = make([]Workspace, 0, len(ws))
+	var res = make([]Workspace, 0, len(ws))
 
-    for _, w := range ws {
-        log.Print(w)
-        res = append(res, Workspace{})
-    }
+	for _, w := range ws {
+		res = append(res, Workspace{
+			ID:   w.ID,
+			Name: w.Name,
+			URL:  w.URL,
+		})
+	}
 
-    return res
+	return res
 }

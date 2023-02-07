@@ -37,10 +37,10 @@ services:
     volumes:
       - yb-master-data-1:/var/workspace/ybinit
     ports:
-      - "7001:7000"
-      - "9001:9000"
-      - "5434:5433"
-      - "9043:9042"
+      - "7000:7000"
+      - "9000:9000"
+      - "5433:5433"
+      - "9042:9042"
     networks:
       - yb
     restart: unless-stopped

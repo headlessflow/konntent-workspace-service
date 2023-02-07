@@ -1,9 +1,6 @@
 package main
 
 import (
-	"github.com/mattn/go-colorable"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	di "konntent-workspace-service"
 	"konntent-workspace-service/internal/app"
 	"konntent-workspace-service/internal/app/middleware"
@@ -16,6 +13,9 @@ import (
 	"konntent-workspace-service/pkg/validation"
 
 	recoverpkg "github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/mattn/go-colorable"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -67,6 +67,15 @@ func (s *server) initCommonMiddlewares(app *fiber.App) {
 	app.Use(middleware.NewRelicMiddleware(s.nrInstance))
 	app.Use(func(c *fiber.Ctx) error {
 		c.Locals(utils.Validator, validator)
+		return c.Next()
+	})
+
+	app.Use(func(c *fiber.Ctx) error {
+		// TODO: make better
+		var h = utils.ContextHeader{}
+		_ = c.ReqHeaderParser(&h)
+		c.Locals("headers", &h)
+
 		return c.Next()
 	})
 
