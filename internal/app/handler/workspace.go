@@ -46,7 +46,10 @@ func (w *workspaceHandler) GetWorkspace(c *fiber.Ctx) error {
 	)
 
 	if err := c.BodyParser(&req); err != nil {
-		return c.JSON(nil)
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
+			"error": err.Error(),
+			"code":  fiber.StatusBadRequest,
+		})
 	}
 
 	workspace, err := w.workspaceOrchestration.GetWorkspace(ctx, req)

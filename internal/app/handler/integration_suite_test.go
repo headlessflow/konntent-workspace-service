@@ -4,23 +4,30 @@
 package handler_test
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/zap"
+	"io"
 	di "konntent-workspace-service"
+	"konntent-workspace-service/internal/app"
+	"konntent-workspace-service/pkg/constants"
 	"konntent-workspace-service/pkg/middlewarepkg"
 	nrcmock "konntent-workspace-service/pkg/nrclient/mocks"
 	pgimock "konntent-workspace-service/pkg/pg/mocks"
 	"konntent-workspace-service/pkg/utils"
 	"konntent-workspace-service/pkg/validation"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
+// import (
 //
-//import (
 //	"bytes"
 //	"encoding/json"
 //	"errors"
@@ -48,8 +55,8 @@ import (
 //	"konntent-workspace-service/pkg/dummyclient"
 //
 //	"github.com/sirupsen/logrus/hooks/test"
-//)
 //
+// )
 var (
 	server *fiber.App
 )
@@ -62,40 +69,34 @@ var (
 	errEvent = errors.New("something went wrong")
 )
 
-//const (
-//	mobilisimURL = "http://mobilisim.com/"
-//
-//	contentTypeHeaderKey = "Content-Type"
-//	jsonHeaderValue      = "application/json"
-//
-//	authorizationHeaderKey       = "X-Authorization"
-//	authorizationMobilisimApiKey = "X-Mobilisim-Key"
-//	bearer                       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNTI0LCJjcmVkaXQiOjExMH0.aVSN0EShTyVnzqFAiI5Vf1XPixZGnrkvPXxPbNupSLo"
-//	mobilisimBearer              = "1234-5678-9123-0012"
-//)
+const (
+	contentTypeHeaderKey = "Content-Type"
+	jsonHeaderValue      = "application/json"
+
+	authorizationHeaderKey   = "X-User-ID"
+	authorizationHeaderValue = "123"
+)
 
 func TestHandlerIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "API Integration Suite")
 }
 
-//
-//var _ = BeforeEach(func() {
-//	jwtInstance.EXPECT().GetModel(gomock.Any()).AnyTimes().Return(&jwtModel)
-//})
-//
-//var _ = BeforeSuite(func() {
-//	loadMockDependencies()
-//
-//	initServer()
-//
-//	go func() {
-//		if serveErr := server.Listen(fmt.Sprintf(":%s", constants.TestPort)); serveErr != nil {
-//			Expect(serveErr).NotTo(HaveOccurred())
-//		}
-//	}()
-//})
-//
+//	var _ = BeforeEach(func() {
+//		jwtInstance.EXPECT().GetModel(gomock.Any()).AnyTimes().Return(&jwtModel)
+//	})
+var _ = BeforeSuite(func() {
+	loadMockDependencies()
+
+	initServer()
+
+	go func() {
+		if serveErr := server.Listen(fmt.Sprintf(":%s", constants.TestPort)); serveErr != nil {
+			Expect(serveErr).NotTo(HaveOccurred())
+		}
+	}()
+})
+
 var _ = AfterSuite(func() {
 	defer func() {
 		_ = server.Shutdown()
@@ -105,6 +106,7 @@ var _ = AfterSuite(func() {
 func loadMockDependencies() {
 	mockCtrl = gomock.NewController(GinkgoT())
 	pgMock = pgimock.NewMockInstance(mockCtrl)
+	nrMock = nrcmock.NewMockNewRelicInstance(mockCtrl)
 }
 
 func initServer() {
@@ -117,10 +119,6 @@ func initServer() {
 	validator := validation.InitValidator()
 
 	server.Use(func(c *fiber.Ctx) error {
-		c.Locals(utils.Claimer, s.jwtInstance)
-		return c.Next()
-	})
-	server.Use(func(c *fiber.Ctx) error {
 		c.Locals(utils.Validator, validator)
 		return c.Next()
 	})
@@ -129,37 +127,35 @@ func initServer() {
 	route := di.InitAll(
 		logger,
 		pgMock,
-		nrInstance,
+		nrMock,
 	)
 
-	route.SetupRoutes(&appctx.RouteCtx{
+	route.SetupRoutes(&app.RouteCtx{
 		App: server,
 	})
 }
 
-//
-//func prepareRequestWithToken(method, url string, data []byte) *http.Request {
-//	var body io.Reader
-//	if data != nil {
-//		body = bytes.NewBuffer(data)
-//	}
-//
-//	req := httptest.NewRequest(method, url, body)
-//	req.Header.Add(contentTypeHeaderKey, jsonHeaderValue)
-//	req.Header.Add(authorizationHeaderKey, bearer)
-//	req.Header.Add(authorizationMobilisimApiKey, mobilisimBearer)
-//
-//	return req
-//}
-//
-//func sendTestRequest(req *http.Request) (*http.Response, []byte) {
-//	resp, _ := server.Test(req)
-//	defer resp.Body.Close()
-//
-//	body, _ := io.ReadAll(resp.Body)
-//	return resp, body
-//}
-//
+func prepareRequestWithToken(method, url string, data []byte) *http.Request {
+	var body io.Reader
+	if data != nil {
+		body = bytes.NewBuffer(data)
+	}
+
+	req := httptest.NewRequest(method, url, body)
+	req.Header.Add(contentTypeHeaderKey, jsonHeaderValue)
+	req.Header.Add(authorizationHeaderKey, authorizationHeaderValue)
+
+	return req
+}
+
+func sendTestRequest(req *http.Request) (*http.Response, []byte) {
+	resp, _ := server.Test(req)
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	return resp, body
+}
+
 ////func mockFailedRequest(_req httpclient.Request) {
 ////	httpClientMock.EXPECT().
 ////		HandleRequest(ctx, _req).Times(1).Return(nil, errRequestTimeout)

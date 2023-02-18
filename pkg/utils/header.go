@@ -7,5 +7,5 @@ type ContextHeader struct {
 }
 
 func GetHeaderMapByContext(c context.Context) *ContextHeader {
-	return c.Value("headers").(*ContextHeader)
+	return c.Value(HeaderMapCtx).(*ContextHeader)
 }

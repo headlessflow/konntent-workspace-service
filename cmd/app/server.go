@@ -71,15 +71,6 @@ func (s *server) initCommonMiddlewares(app *fiber.App) {
 	})
 
 	app.Use(func(c *fiber.Ctx) error {
-		// TODO: make better
-		var h = utils.ContextHeader{}
-		_ = c.ReqHeaderParser(&h)
-		c.Locals("headers", &h)
-
-		return c.Next()
-	})
-
-	app.Use(func(c *fiber.Ctx) error {
 		c.Locals(utils.Claimer, s.jwtInstance)
 		return c.Next()
 	})
