@@ -45,6 +45,33 @@ services:
       - yb
     restart: unless-stopped
 
+
+  workspace-integration-yugabyte:
+    container_name: yb-workspace-integration-master-cluster
+    image: yugabytedb/yugabyte:latest
+    environment:
+      POSTGRES_USER: yugabyte
+      POSTGRES_PASSWORD: yugabyte
+      POSTGRES_DB: integration
+      PGDATA: /data/integration/yb
+      SERVICE_7000_NAME: yb-workspace-integration-master
+    command: |
+      -c fsync=off
+      -c synchronous_commit=off
+      -c archive_mode=off
+      -c wal_level=minimal
+      -c shared_buffers=512MB
+    volumes:
+      - yb-integration-data:/var/workspace/ybinit
+    ports:
+      - "7001:7000"
+      - "9001:9000"
+      - "5434:5433"
+      - "9043:9042"
+    networks:
+      - yb
+    restart: unless-stopped
+
 networks:
   yb:
     driver: bridge
@@ -54,4 +81,5 @@ networks:
 volumes:
   go-modules-volume:
   yb-master-data-1:
+  yb-integration-data:
   yb-tserver-data-1:

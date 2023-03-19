@@ -14,11 +14,12 @@ import (
 	"go.uber.org/zap"
 	"io"
 	di "konntent-workspace-service"
+	app2 "konntent-workspace-service/configs/app"
 	"konntent-workspace-service/internal/app"
 	"konntent-workspace-service/pkg/constants"
 	"konntent-workspace-service/pkg/middlewarepkg"
 	nrcmock "konntent-workspace-service/pkg/nrclient/mocks"
-	pgimock "konntent-workspace-service/pkg/pg/mocks"
+	"konntent-workspace-service/pkg/pg"
 	"konntent-workspace-service/pkg/utils"
 	"konntent-workspace-service/pkg/validation"
 	"net/http"
@@ -58,13 +59,15 @@ import (
 //
 // )
 var (
+	logger *zap.Logger
 	server *fiber.App
 )
 
 var (
 	mockCtrl *gomock.Controller
-	pgMock   *pgimock.MockInstance
 	nrMock   *nrcmock.MockNewRelicInstance
+
+	pgInstance pg.Instance
 
 	errEvent = errors.New("something went wrong")
 )
@@ -105,13 +108,22 @@ var _ = AfterSuite(func() {
 
 func loadMockDependencies() {
 	mockCtrl = gomock.NewController(GinkgoT())
-	pgMock = pgimock.NewMockInstance(mockCtrl)
 	nrMock = nrcmock.NewMockNewRelicInstance(mockCtrl)
 }
 
-func initServer() {
-	var logger = zap.L()
+func loadDependencies() {
+	logger = zap.L()
+	pgInstance, _ = pg.NewPGInstance(logger, app2.PGSettings{
+		Name:     "",
+		User:     "",
+		Password: "",
+		Host:     "",
+		Port:     0,
+		Debug:    false,
+	})
+}
 
+func initServer() {
 	server = fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 	})
